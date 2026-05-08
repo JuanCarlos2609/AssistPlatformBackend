@@ -7,15 +7,18 @@ import {
   Query,
   Patch,
   Param,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { UsersService } from './users.service';
-import { BiometricGateway } from './users.gateway'; // 1. Importa tu Gateway
+import { BiometricGateway } from './users.gateway';
 
 @Controller('users')
 export class UsersController {
-  // 2. Inyecta el BiometricGateway en el constructor
   constructor(
     private readonly usersService: UsersService,
     private readonly biometricGateway: BiometricGateway,
@@ -23,12 +26,16 @@ export class UsersController {
 
   @Get()
   @HttpCode(200)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin')
   findAll(@Query() query: GetUsersDto) {
     return this.usersService.findAll(query);
   }
 
   @Post()
-  @HttpCode(201) // Cambiado a 201 porque es creación
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin')
   create(@Body() body: CreateUserDto) {
     return this.usersService.create(body);
   }

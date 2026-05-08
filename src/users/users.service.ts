@@ -73,6 +73,7 @@ export class UsersService {
         'user.privacy_notice',
         'user.biometric_id',
         'user.nss',
+        'user.role',
         'user.created_at',
         'user.updated_at',
       ]);
@@ -108,9 +109,26 @@ export class UsersService {
 
     const password_hash = await bcrypt.hash(password, 10);
 
+    // Obtener los valores permitidos del constraint para usar el casing correcto
+    const rows: { def: string }[] = await this.userRepository.query(
+      `SELECT pg_get_constraintdef(oid) AS def
+       FROM pg_constraint
+       WHERE conrelid = 'users'::regclass AND conname = 'users_role_check'`,
+    );
+    const constraintDef: string = rows[0]?.def ?? '';
+    const allowed: string[] = (constraintDef.match(/'([^']+)'/g) ?? []).map(
+      (v: string) => v.replace(/'/g, ''),
+    );
+
+    const rawRole = (rest.role ?? 'User').toLowerCase();
+    const dbRole =
+      allowed.find((v) => v.toLowerCase() === rawRole) ??
+      (rawRole === 'admin' ? 'Admin' : 'User');
+
     const newUser = this.userRepository.create({
       ...rest,
       biometric_id: rest.biometric_id ?? null,
+      role: dbRole as 'Admin' | 'User',
       password_hash,
     });
 
@@ -177,6 +195,7 @@ export class UsersService {
         'user.privacy_notice',
         'user.biometric_id',
         'user.nss',
+        'user.role',
         'user.created_at',
         'user.updated_at',
       ])

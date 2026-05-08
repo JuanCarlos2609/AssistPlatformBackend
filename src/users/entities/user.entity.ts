@@ -53,6 +53,9 @@ export class User {
   @Column({ type: 'int', nullable: true })
   nss: number | null;
 
+  @Column({ type: 'varchar', default: 'User' })
+  role: 'Admin' | 'User';
+
   @CreateDateColumn()
   created_at: Date;
 

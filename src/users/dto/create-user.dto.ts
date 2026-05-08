@@ -13,4 +13,5 @@ export class CreateUserDto {
   privacy_notice?: boolean;
   biometric_id?: number | null;
   nss?: number;
+  role?: 'Admin' | 'User';
 }
