@@ -48,7 +48,7 @@ import { AuthModule } from './auth/auth.module';
         // TypeORM lee toda la cadena de conexión desde DATABASE_URL
         url: configService.get<string>('DATABASE_URL'),
         autoLoadEntities: true,
-        synchronize: false, // Excelente práctica mantenerlo en false para producción
+        synchronize: true, // Excelente práctica mantenerlo en false para producción
         // IMPORTANTE para Supabase: Requiere conexión segura (SSL)
         ssl: {
           rejectUnauthorized: false,
