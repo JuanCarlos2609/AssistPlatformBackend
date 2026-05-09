@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -76,10 +80,11 @@ export class UsersService {
         'user.role',
         'user.created_at',
         'user.updated_at',
-      ]);
+      ])
+      .where('user.is_pending_deletion IS NOT TRUE');
 
     if (search?.trim()) {
-      query.where(
+      query.andWhere(
         'user.name ILIKE :search OR user.last_name ILIKE :search OR user.email_work ILIKE :search',
         { search: `%${search.trim()}%` },
       );
@@ -159,6 +164,59 @@ export class UsersService {
       }
       throw err;
     }
+  }
+
+  async deleteUser(id: number): Promise<ApiResponse<null>> {
+    const user = await this.userRepository.findOne({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException({
+        code: 404,
+        message: `No se encontró el usuario con id ${id}.`,
+        data: null,
+      });
+    }
+
+    if (!user.biometric_id) {
+      await this.userRepository.delete(id);
+      return { code: 200, message: 'ok', data: null };
+    }
+
+    await this.userRepository.update(id, { is_pending_deletion: true });
+    return { code: 200, message: 'ok', data: null };
+  }
+
+  async getStatusBorrado(): Promise<{
+    pending: boolean;
+    slot?: number;
+    userId?: number;
+  }> {
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .select(['user.id', 'user.biometric_id'])
+      .where('user.is_pending_deletion = :flag', { flag: true })
+      .getOne();
+
+    if (user) {
+      return {
+        pending: true,
+        slot: user.biometric_id ?? undefined,
+        userId: user.id,
+      };
+    }
+    return { pending: false };
+  }
+
+  async confirmarBorrado(slot: number): Promise<ApiResponse<null>> {
+    const user = await this.userRepository.findOne({
+      where: { biometric_id: slot, is_pending_deletion: true },
+    });
+
+    if (user) {
+      await this.userRepository.delete(user.id);
+    }
+
+    return { code: 200, message: 'ok', data: null };
   }
 
   async update(

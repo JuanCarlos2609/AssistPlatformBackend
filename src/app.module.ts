@@ -23,7 +23,7 @@
 //     AuthModule,
 //   ],
 // })
-// export class AppModule {}
+// export class AppModule { }
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';

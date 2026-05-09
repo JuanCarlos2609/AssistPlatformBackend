@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Post,
@@ -56,6 +57,31 @@ export class UsersController {
   @HttpCode(200)
   getStatusRegistro() {
     return this.usersService.getStatusRegistro();
+  }
+
+  // --- ENDPOINTS PARA BORRADO CON COLA DE TAREAS ---
+
+  // El Admin solicita eliminar a un usuario
+  @Delete(':id')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin')
+  async deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(+id);
+  }
+
+  // La Pico W pregunta si hay alguna huella pendiente de borrado
+  @Get('status-borrado')
+  @HttpCode(200)
+  getStatusBorrado() {
+    return this.usersService.getStatusBorrado();
+  }
+
+  // La Pico W avisa que ya borró la huella del sensor físico
+  @Post('confirmar-borrado')
+  @HttpCode(200)
+  async confirmarBorrado(@Body() body: { slot: number }) {
+    return this.usersService.confirmarBorrado(body.slot);
   }
 
   // Paso 4: La Pico W llama aquí para guardar el ID final en la BD
