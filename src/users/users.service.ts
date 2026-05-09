@@ -105,7 +105,7 @@ export class UsersService {
   async create(
     dto: CreateUserDto,
   ): Promise<ApiResponse<{ id: number; user: Omit<User, 'password_hash'> }>> {
-    const { password, ...rest } = dto;
+    const { password, nss, ...rest } = dto;
 
     const password_hash = await bcrypt.hash(password, 10);
 
@@ -127,6 +127,7 @@ export class UsersService {
 
     const newUser = this.userRepository.create({
       ...rest,
+      nss: nss === undefined || nss === null ? null : String(nss),
       biometric_id: rest.biometric_id ?? null,
       role: dbRole as 'Admin' | 'User',
       password_hash,

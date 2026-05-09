@@ -50,8 +50,9 @@ export class User {
   @Column({ type: 'int', nullable: true })
   biometric_id: number | null;
 
-  @Column({ type: 'int', nullable: true })
-  nss: number | null;
+  /** NSS mexicano (11 dígitos): no cabe en int4; usar bigint en PostgreSQL. */
+  @Column({ type: 'bigint', nullable: true })
+  nss: string | null;
 
   @Column({ type: 'varchar', default: 'User' })
   role: 'Admin' | 'User';
