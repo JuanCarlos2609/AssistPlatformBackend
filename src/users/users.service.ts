@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { ApiResponse } from '../common/interfaces/api-response.interface';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { User } from './entities/user.entity';
 
@@ -291,5 +292,61 @@ export class UsersService {
       message: 'ok',
       data: updated,
     };
+  }
+
+  async updateUser(id: number, dto: UpdateUserDto): Promise<ApiResponse<User>> {
+    const user = await this.userRepository.findOne({ where: { id } });
+
+    if (!user) {
+      throw new NotFoundException({
+        code: 404,
+        message: `No se encontró el usuario con id ${id}.`,
+        data: null,
+      });
+    }
+
+    const fields: Partial<User> = { ...dto };
+    if (dto.nss !== undefined && dto.nss !== null) {
+      fields.nss = String(dto.nss);
+    }
+
+    try {
+      await this.userRepository.update(id, fields);
+    } catch (err: any) {
+      if (err?.code === '23505') {
+        throw new ConflictException({
+          code: 409,
+          message: resolveUniqueViolationMessage(err.detail ?? ''),
+          data: null,
+        });
+      }
+      throw err;
+    }
+
+    const updated = await this.userRepository
+      .createQueryBuilder('user')
+      .select([
+        'user.id',
+        'user.employee_number',
+        'user.name',
+        'user.last_name',
+        'user.middle_name',
+        'user.curp',
+        'user.rfc',
+        'user.email',
+        'user.phone',
+        'user.department',
+        'user.position',
+        'user.email_work',
+        'user.nss',
+        'user.role',
+        'user.status',
+        'user.created_at',
+        'user.updated_at',
+      ])
+      .where('user.id = :id', { id })
+      .getOne();
+
+    return { code: 200, message: 'ok', data: updated };
   }
 }

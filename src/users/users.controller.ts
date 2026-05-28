@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersDto } from './dto/get-users.dto';
 import { UsersService } from './users.service';
 import { BiometricGateway } from './users.gateway';
@@ -40,6 +41,14 @@ export class UsersController {
   @Roles('Admin')
   create(@Body() body: CreateUserDto) {
     return this.usersService.create(body);
+  }
+
+  @Patch(':id')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin')
+  updateUser(@Param('id') id: string, @Body() body: UpdateUserDto) {
+    return this.usersService.updateUser(+id, body);
   }
 
   // --- NUEVOS ENDPOINTS PARA EL BIOMÉTRICO ---
