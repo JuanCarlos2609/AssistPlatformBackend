@@ -53,6 +53,9 @@ export class User {
   @Column({ type: 'boolean', default: false })
   is_pending_deletion: boolean;
 
+  @Column({ type: 'char', length: 1, default: 'A' })
+  status: 'A' | 'B';
+
   /** NSS mexicano (11 dígitos): no cabe en int4; usar bigint en PostgreSQL. */
   @Column({ type: 'bigint', nullable: true })
   nss: string | null;

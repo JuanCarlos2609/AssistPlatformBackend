@@ -81,7 +81,7 @@ export class UsersService {
         'user.created_at',
         'user.updated_at',
       ])
-      .where('user.is_pending_deletion IS NOT TRUE');
+      .where('user.is_pending_deletion IS NOT TRUE AND user.status = :status', { status: 'A' });
 
     if (search?.trim()) {
       query.andWhere(
@@ -178,7 +178,7 @@ export class UsersService {
     }
 
     if (!user.biometric_id) {
-      await this.userRepository.delete(id);
+      await this.userRepository.update(id, { status: 'B' });
       return { code: 200, message: 'ok', data: null };
     }
 
@@ -213,7 +213,10 @@ export class UsersService {
     });
 
     if (user) {
-      await this.userRepository.delete(user.id);
+      await this.userRepository.update(user.id, {
+        status: 'B',
+        is_pending_deletion: false,
+      });
     }
 
     return { code: 200, message: 'ok', data: null };

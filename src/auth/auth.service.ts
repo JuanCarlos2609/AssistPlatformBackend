@@ -35,9 +35,10 @@ export class AuthService {
         'user.role',
         'user.password_hash',
       ])
-      .where('user.email = :email OR user.email_work = :email', {
-        email: dto.email.toLowerCase().trim(),
-      })
+      .where(
+        '(user.email = :email OR user.email_work = :email) AND user.status = :status',
+        { email: dto.email.toLowerCase().trim(), status: 'A' },
+      )
       .getOne();
 
     if (!user) {
