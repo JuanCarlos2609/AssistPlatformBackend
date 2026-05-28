@@ -25,6 +25,10 @@ function resolveUniqueViolationMessage(detail: string): string {
   return 'Uno de los datos ingresados ya existe en el sistema.';
 }
 
+function generateEmployeeNumber(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
 @Injectable()
 export class UsersService {
   private pendingRegistro: { userId: number } | null = null;
@@ -64,6 +68,7 @@ export class UsersService {
       .createQueryBuilder('user')
       .select([
         'user.id',
+        'user.employee_number',
         'user.name',
         'user.last_name',
         'user.middle_name',
@@ -78,6 +83,7 @@ export class UsersService {
         'user.biometric_id',
         'user.nss',
         'user.role',
+        'user.status',
         'user.created_at',
         'user.updated_at',
       ])
@@ -130,12 +136,23 @@ export class UsersService {
       allowed.find((v) => v.toLowerCase() === rawRole) ??
       (rawRole === 'admin' ? 'Admin' : 'User');
 
+    // Generar número de empleado único de 6 dígitos con reintento ante colisión
+    let employee_number: string;
+    let attempts = 0;
+    do {
+      employee_number = generateEmployeeNumber();
+      const exists = await this.userRepository.findOne({ where: { employee_number } });
+      if (!exists) break;
+      attempts++;
+    } while (attempts < 10);
+
     const newUser = this.userRepository.create({
       ...rest,
       nss: nss === undefined || nss === null ? null : String(nss),
       biometric_id: rest.biometric_id ?? null,
       role: dbRole as 'Admin' | 'User',
       password_hash,
+      employee_number,
     });
 
     try {
@@ -244,6 +261,7 @@ export class UsersService {
       .createQueryBuilder('user')
       .select([
         'user.id',
+        'user.employee_number',
         'user.name',
         'user.last_name',
         'user.middle_name',
@@ -258,6 +276,7 @@ export class UsersService {
         'user.biometric_id',
         'user.nss',
         'user.role',
+        'user.status',
         'user.created_at',
         'user.updated_at',
       ])

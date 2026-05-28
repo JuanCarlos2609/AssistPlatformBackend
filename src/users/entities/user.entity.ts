@@ -11,6 +11,9 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ type: 'char', length: 6, unique: true, nullable: true })
+  employee_number: string;
+
   @Column({ type: 'varchar', nullable: true })
   name: string;
 
