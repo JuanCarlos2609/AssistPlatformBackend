@@ -305,9 +305,10 @@ export class UsersService {
       });
     }
 
-    const fields: Partial<User> = { ...dto };
-    if (dto.nss !== undefined && dto.nss !== null) {
-      fields.nss = String(dto.nss);
+    const { nss, ...rest } = dto;
+    const fields: Partial<User> = { ...rest };
+    if (nss !== undefined && nss !== null) {
+      fields.nss = String(nss);
     }
 
     try {
