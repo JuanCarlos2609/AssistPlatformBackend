@@ -53,7 +53,7 @@ export class UsersService {
     return { pending: false };
   }
 
-  async findAll(dto: GetUsersDto): Promise<
+  async findAll(dto: GetUsersDto, excludeId?: number): Promise<
     ApiResponse<{
       users: User[];
       total: number;
@@ -87,7 +87,10 @@ export class UsersService {
         'user.created_at',
         'user.updated_at',
       ])
-      .where('user.is_pending_deletion IS NOT TRUE AND user.status = :status', { status: 'A' });
+      .where(
+        'user.is_pending_deletion IS NOT TRUE AND user.status = :status AND user.id != :excludeId',
+        { status: 'A', excludeId: excludeId ?? 0 },
+      );
 
     if (search?.trim()) {
       query.andWhere(

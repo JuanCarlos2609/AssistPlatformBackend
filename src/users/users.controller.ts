@@ -9,6 +9,7 @@ import {
   Patch,
   Param,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -29,8 +30,8 @@ export class UsersController {
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Admin')
-  findAll(@Query() query: GetUsersDto) {
-    return this.usersService.findAll(query);
+  findAll(@Query() query: GetUsersDto, @Request() req: any) {
+    return this.usersService.findAll(query, req.user.sub);
   }
 
   @Post()
