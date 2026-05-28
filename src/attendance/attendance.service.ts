@@ -48,11 +48,13 @@ export class AttendanceService {
       const openRecord = await this.attendanceRepository.findOne({
         where: {
           user_id: user.id,
-          exit_time: IsNull(), // Busca un registro de este usuario sin salida
+          exit_time: IsNull(),
         },
       });
 
       let scanType = '';
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
 
       // 3. Lógica de Entrada vs Salida en Base de Datos
       if (!openRecord) {
@@ -63,10 +65,29 @@ export class AttendanceService {
         await this.attendanceRepository.save(newAttendance);
         scanType = 'Entrada';
       } else {
-        // SÍ tiene entrada abierta -> Actualizar registro existente (SALIDA)
-        openRecord.exit_time = new Date(); // Asigna la hora actual
-        await this.attendanceRepository.save(openRecord);
-        scanType = 'Salida';
+        const entryDateStr = openRecord.entry_time.toISOString().slice(0, 10);
+        const isFromPreviousDay = entryDateStr < todayStr;
+
+        if (isFromPreviousDay) {
+          // El registro abierto es de un día anterior:
+          // 1. Cerrarlo automáticamente al final de ese día (23:59:59)
+          const endOfEntryDay = new Date(openRecord.entry_time);
+          endOfEntryDay.setHours(23, 59, 59, 0);
+          openRecord.exit_time = endOfEntryDay;
+          await this.attendanceRepository.save(openRecord);
+
+          // 2. Crear una nueva ENTRADA para hoy
+          const newAttendance = this.attendanceRepository.create({
+            user_id: user.id,
+          });
+          await this.attendanceRepository.save(newAttendance);
+          scanType = 'Entrada';
+        } else {
+          // El registro abierto es del mismo día -> SALIDA normal
+          openRecord.exit_time = now;
+          await this.attendanceRepository.save(openRecord);
+          scanType = 'Salida';
+        }
       }
 
       // 4. Avisar al Frontend (Next.js/React) vía WebSocket
