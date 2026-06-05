@@ -43,15 +43,7 @@ export class UsersController {
     return this.usersService.create(body);
   }
 
-  @Patch(':id')
-  @HttpCode(200)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Admin')
-  updateUser(@Param('id') id: string, @Body() body: UpdateUserDto) {
-    return this.usersService.updateUser(+id, body);
-  }
-
-  // --- NUEVOS ENDPOINTS PARA EL BIOMÉTRICO ---
+  // --- ENDPOINTS BIOMÉTRICOS (rutas estáticas ANTES de :id para evitar conflictos) ---
 
   // Cancela un registro pendiente (llamado cuando el front cierra el modal sin completar)
   @Patch('cancelar-registro')
@@ -110,12 +102,10 @@ export class UsersController {
     @Param('id') id: string,
     @Body() body: { biometric_id: number },
   ) {
-    // Actualizamos al usuario en la base de datos
     const userUpdated = await this.usersService.update(+id, {
       biometric_id: body.biometric_id,
     });
 
-    // Opcional: Le avisamos al Frontend por Sockets que ya quedó listo
     this.biometricGateway.notificarExitoAlFront({
       userId: id,
       biometricId: body.biometric_id,
@@ -123,5 +113,14 @@ export class UsersController {
     });
 
     return userUpdated;
+  }
+
+  // Ruta dinámica :id al FINAL para no capturar rutas estáticas como 'cancelar-registro'
+  @Patch(':id')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Admin')
+  updateUser(@Param('id') id: string, @Body() body: UpdateUserDto) {
+    return this.usersService.updateUser(+id, body);
   }
 }
