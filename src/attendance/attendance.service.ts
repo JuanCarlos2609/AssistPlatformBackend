@@ -35,9 +35,9 @@ export class AttendanceService {
 
   async processScan(biometricId: number) {
     try {
-      // 1. Buscar al usuario por su biometric_id
+      // 1. Buscar al usuario activo por su biometric_id
       const user = await this.userRepository.findOne({
-        where: { biometric_id: biometricId },
+        where: { biometric_id: biometricId, status: 'A', is_pending_deletion: false },
       });
 
       if (!user) {

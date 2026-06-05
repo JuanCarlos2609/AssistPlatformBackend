@@ -237,6 +237,7 @@ export class UsersService {
       await this.userRepository.update(user.id, {
         status: 'B',
         is_pending_deletion: false,
+        biometric_id: null,
       });
     }
 
