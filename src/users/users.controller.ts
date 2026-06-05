@@ -53,6 +53,15 @@ export class UsersController {
 
   // --- NUEVOS ENDPOINTS PARA EL BIOMÉTRICO ---
 
+  // Cancela un registro pendiente (llamado cuando el front cierra el modal sin completar)
+  @Patch('cancelar-registro')
+  @HttpCode(200)
+  cancelarRegistro() {
+    this.usersService.clearPendingRegistro();
+    this.biometricGateway.emitirCancelacionRegistro();
+    return { message: 'Registro cancelado' };
+  }
+
   // Paso 2: El Front llama aquí para activar el sensor
   @Patch(':id/activar-sensor')
   @HttpCode(200)

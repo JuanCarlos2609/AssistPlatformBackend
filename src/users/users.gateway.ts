@@ -38,4 +38,9 @@ export class BiometricGateway implements OnGatewayConnection {
   notificarExitoAlFront(data: any) {
     this.server.emit('front:registro_completo', data);
   }
+
+  // Método para avisar a la Pico W que cancele el registro en curso
+  emitirCancelacionRegistro() {
+    this.server.emit('pico:cancelar_registro');
+  }
 }
