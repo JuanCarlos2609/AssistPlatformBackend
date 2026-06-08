@@ -94,9 +94,15 @@ export class UsersService {
       );
 
     if (search?.trim()) {
+      const term = `%${search.trim()}%`;
       query.andWhere(
-        'user.name ILIKE :search OR user.last_name ILIKE :search OR user.email_work ILIKE :search',
-        { search: `%${search.trim()}%` },
+        `(user.name ILIKE :search
+          OR user.last_name ILIKE :search
+          OR user.middle_name ILIKE :search
+          OR user.email ILIKE :search
+          OR user.email_work ILIKE :search
+          OR CAST(user.employee_number AS TEXT) ILIKE :search)`,
+        { search: term },
       );
     }
 
