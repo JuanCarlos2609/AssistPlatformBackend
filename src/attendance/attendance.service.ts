@@ -10,6 +10,16 @@ import { User } from '../users/entities/user.entity';
 import { Attendance } from './entities/attendance.entity';
 import { BiometricGateway } from '../users/users.gateway';
 
+// UTC-6 (America/Mexico_City sin horario de verano).
+// Usamos offset fijo para no depender de librerías externas en el servidor.
+const MEXICO_OFFSET_MS = -6 * 60 * 60 * 1000;
+
+/** Devuelve la fecha en zona horaria de México como string "YYYY-MM-DD". */
+function toMexicoDateStr(date: Date): string {
+  const local = new Date(date.getTime() + MEXICO_OFFSET_MS);
+  return local.toISOString().slice(0, 10);
+}
+
 export interface AttendanceRecord {
   id: number;
   entry_time: Date;
@@ -54,7 +64,7 @@ export class AttendanceService {
 
       let scanType = '';
       const now = new Date();
-      const todayStr = now.toISOString().slice(0, 10);
+      const todayStr = toMexicoDateStr(now);
 
       // 3. Lógica de Entrada vs Salida en Base de Datos
       if (!openRecord) {
@@ -65,7 +75,7 @@ export class AttendanceService {
         await this.attendanceRepository.save(newAttendance);
         scanType = 'Entrada';
       } else {
-        const entryDateStr = openRecord.entry_time.toISOString().slice(0, 10);
+        const entryDateStr = toMexicoDateStr(openRecord.entry_time);
         const isFromPreviousDay = entryDateStr < todayStr;
 
         if (isFromPreviousDay) {
@@ -125,7 +135,7 @@ export class AttendanceService {
     const byDate = new Map<string, AttendanceRecord[]>();
 
     for (const r of records) {
-      const dateKey = r.entry_time.toISOString().slice(0, 10);
+      const dateKey = toMexicoDateStr(r.entry_time);
       if (!byDate.has(dateKey)) byDate.set(dateKey, []);
       byDate.get(dateKey)!.push({
         id: r.id,
